@@ -64,7 +64,7 @@ class RILangVectorAddition(DSM):
             context = context[0]
             if context not in self.word_vectors:
                 # Create index vector if not exist
-                hsh = hashlib.sha1()
+                hsh = hashlib.md5()
                 hsh.update(context.encode())
                 seed = int(hsh.hexdigest(), 16) % 4294967295 # highest number allowed by seed
                 np.random.seed(seed)
@@ -155,7 +155,7 @@ class RILangVectorPermutation(DSM):
         def get_index_vector(context):
             if context not in self.word_vectors:
                 # Create index vector if not exist
-                hsh = hashlib.sha1()
+                hsh = hashlib.md5()
                 hsh.update(context.encode())
                 seed = int(hsh.hexdigest(), 16) % 4294967295 # highest number allowed by seed
                 np.random.seed(seed)
@@ -244,10 +244,9 @@ class RILangVectorConvolution(DSM):
         """
 
         def get_index_vector(context):
-            context = context[0]
             if context not in self.word_vectors:
                 # Create index vector if not exist
-                hsh = hashlib.sha1()
+                hsh = hashlib.md5()
                 hsh.update(context.encode())
                 seed = int(hsh.hexdigest(), 16) % 4294967295 # highest number allowed by seed
                 np.random.seed(seed)
@@ -338,18 +337,20 @@ class RILangVectorConvolutionNgrams(DSM):
         """
 
         def get_index_vector(context):
-            context = context[0]
-            hsh = hashlib.sha1()
-            hsh.update(context.encode())
-            seed = int(hsh.hexdigest(), 16) % 4294967295 # highest number allowed by seed
-            np.random.seed(seed)
-            rand_indices = np.random.permutation(self.config['num_indices'])
-            pos_indices = rand_indices[rand_indices.size // 2:]
-            neg_indices = rand_indices[:rand_indices.size // 2]
-            index_vector = np.zeros((1,self.config['dimensionality']))
-            index_vector[0,pos_indices] = 1
-            index_vector[0,neg_indices] = -1
-            return index_vector
+            if context not in self.word_vectors:
+                # Create index vector if not exist
+                hsh = hashlib.md5()
+                hsh.update(context.encode())
+                seed = int(hsh.hexdigest(), 16) % 4294967295 # highest number allowed by seed
+                np.random.seed(seed)
+                rand_indices = np.random.permutation(self.config['num_indices'])
+                pos_indices = rand_indices[rand_indices.size // 2:]
+                neg_indices = rand_indices[:rand_indices.size // 2]
+                index_vector = np.zeros((1,self.config['dimensionality']))
+                index_vector[0,pos_indices] = 1
+                index_vector[0,neg_indices] = -1
+                self.word_vectors[context] = index_vector
+            return self.word_vectors[context]
 
         text_vector = np.zeros((1, self.config['dimensionality']))
         for block in block_stream:
@@ -414,7 +415,7 @@ class ShortestPathLI(DSM):
 
         def get_index_vector(context):
             context = context[0]
-            hsh = hashlib.sha1()
+            hsh = hashlib.md5()
             hsh.update(context.encode())
             seed = int(hsh.hexdigest(), 16) % 4294967295 # highest number allowed by seed
             np.random.seed(seed)
@@ -504,7 +505,7 @@ class RICharacterNgramVectors(DSM):
         def get_index_vector(context):
             if context not in self.word_vectors:
                 # Create index vector if not exist
-                hsh = hashlib.sha1()
+                hsh = hashlib.md5()
                 hsh.update(context.encode())
                 seed = int(hsh.hexdigest(), 16) % 4294967295 # highest number allowed by seed
                 np.random.seed(seed)
@@ -599,7 +600,7 @@ class RIIndexVectors(DSM):
         def get_index_vector(context):
             if context not in self.word_vectors:
                 # Create index vector if not exist
-                hsh = hashlib.sha1()
+                hsh = hashlib.md5()
                 hsh.update(context.encode())
                 seed = int(hsh.hexdigest(), 16) % 4294967295 # highest number allowed by seed
                 np.random.seed(seed)

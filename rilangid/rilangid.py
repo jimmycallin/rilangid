@@ -24,11 +24,11 @@ def words_to_chars(corpus):
 def chars_to_blocks(chars, block_size):
     block = []
     for char in chars:
-        if char != ' ':
+        if len(block) < block_size:
             block.append(char)
             continue
         yield block
-        block = []
+        block = block[1:] + [char]
     yield block
 
 
