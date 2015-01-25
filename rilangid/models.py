@@ -76,7 +76,7 @@ class RILangID(DSM):
             hsh.update(context.encode())
             seed = int(hsh.hexdigest(), 16) % 4294967295 # highest number allowed by seed
             np.random.seed(seed)
-            rand_indices = np.random.permutation(self.config['num_indices'])
+            rand_indices = np.random.permutation(self.config['dimensionality'])[:self.config['num_indices']]
             pos_indices = rand_indices[rand_indices.size // 2:]
             neg_indices = rand_indices[:rand_indices.size // 2]
             index_vector = np.zeros((1,self.config['dimensionality']))
@@ -93,18 +93,18 @@ class RILangVectorAddition(RILangID):
         """
         word_to_col = {}
 
-        language_vector = np.zeros((1, self.config['dimensionality']))
+        text_vector = np.zeros((1, self.config['dimensionality']))
         for block in text:
-            block_vector = np.zeros_like(language_vector)
+            block_vector = np.zeros_like(text_vector)
             for k, char in enumerate(block):
                 block_vector += self.get_index_vector(char)
 
-            language_vector += block_vector
+            text_vector += block_vector
 
         row2word = [self.config['language']] if 'language' in self.config else ['']
         col2word = list(range(self.config['dimensionality']))
 
-        return language_vector, row2word, col2word
+        return text_vector, row2word, col2word
 
 class RILangVectorPermutation(RILangID):
     def _build(self, block_stream):
