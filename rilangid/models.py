@@ -1,5 +1,6 @@
 from pydsm import IndexMatrix
 from pydsm.model import DSM
+import scipy
 import numpy as np
 import hashlib
 
@@ -176,6 +177,48 @@ class RILangVectorNgrams(RILangID):
         col2word = list(range(self.config['dimensionality']))
 
         return text_vector, row2word, col2word
+
+
+class RILangVectorNgramsGramSchmidt(RILangVectorNgrams):
+    @DSM.matrix.setter
+    def matrix(self, mat):
+        if mat.shape[0] == 0 or mat.shape[1] == 0:
+            self._matrix = mat
+        else:
+            orthogonalized = scipy.sparse.coo_matrix(self.Gram_Schmidt(mat.to_ndarray()))
+            self._matrix = mat._new_instance(orthogonalized)
+    
+
+    @classmethod
+    def Gram_Schmidt(cls, vecs, row_wise_storage=True):
+        """
+        Apply the Gram-Schmidt orthogonalization algorithm to a set
+        of vectors. vecs is a two-dimensional array where the vectors
+        are stored row-wise, or vecs may be a list of vectors, where
+        each vector can be a list or a one-dimensional array.
+        An array basis is returned, where basis[i,:] (row_wise_storage
+        is True) or basis[:,i] (row_wise_storage is False) is the i-th
+        orthonormal vector in the basis.
+
+        This function does not handle null vectors, see Gram_Schmidt
+        for a (slower) function that does.
+        """
+        from numpy.linalg import inv
+        vecs = np.asarray(vecs)  # transform to array if list of vectors
+        m, n = vecs.shape
+        basis = np.array(np.transpose(vecs))
+        eye = np.identity(n).astype(float)
+        
+        basis[:,0] /= np.sqrt(np.dot(basis[:,0], basis[:,0]))
+        for i in range(1, m):
+            v = basis[:,i]/np.sqrt(np.dot(basis[:,i], basis[:,i]))
+            U = basis[:,:i]
+            P = eye - np.dot(U, np.dot(inv(np.dot(np.transpose(U), U)), np.transpose(U)))
+            basis[:, i] = np.dot(P, v)
+            basis[:, i] /= np.sqrt(np.dot(basis[:, i], basis[:, i]))
+
+        return np.transpose(basis) if row_wise_storage else basis
+
 
 
 class ShortestPath(RILangID):

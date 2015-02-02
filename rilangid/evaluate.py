@@ -10,13 +10,13 @@ from pprint import pprint
 
 languages = ['eng', 'bul', 'nld', 'fin', 'lav', 'lit', 'ron', 'deu', 'por', 'slk', 'slv', 'ita', 'spa', 'pol', 'hun', 'ell', 'dan', 'fra', 'est', 'ces', 'afr', 'swe']
 
-def load_project(name, test_sentences):
+def load_project(name, test_sentences, assert_clean_repo=True):
     try:
-        proj = pyresult.Project.get_project(name=name, assert_clean_repo=True)
+        proj = pyresult.Project.get_project(name=name, assert_clean_repo=assert_clean_repo)
         print("Loaded existing project {}.".format(name))
     except KeyError:
         proj = pyresult.Project(name=name,
-                                test_data=test_sentences, assert_clean_repo=True)
+                                test_data=test_sentences, assert_clean_repo=assert_clean_repo)
         print("Created new project {}.".format(name))
     return proj
 
@@ -52,7 +52,7 @@ def evaluate(model_path, test_sentences):
 
 def run_experiment(configuration):
     test_sentences = load_test_sentences(configuration['test_path'])
-    proj = load_project("RILangID", test_sentences)
+    proj = load_project(configuration['project_name'], test_sentences, assert_clean_repo=configuration.get('assert_clean_repo', True))
     corpora = get_corpora(configuration['languages'])
     print("Starting training with configuration:")
     pprint(configuration, width=80)
