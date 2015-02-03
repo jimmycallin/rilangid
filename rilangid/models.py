@@ -1,73 +1,20 @@
+import pydsm
 from pydsm import IndexMatrix
 from pydsm.model import DSM
 import scipy
 import numpy as np
 import hashlib
 
-def words_to_chars(corpus):
-    "Converts list of words to list of characters"
-    for sentence in corpus:
-        for char in sentence:
-            yield char
-
-def words_to_blocks(corpus, block_size):
-    block = []
-    for char in words_to_chars(corpus):
-        if len(block) < block_size:
-            block.append(char)
-            continue
-        yield block
-        block = block[1:] + [char]
-    yield block
-
 class RILangID(DSM):
     def __init__(self,
-                 corpus,
-                 window_size,
+                 corpus=None,
                  config=None,
-                 lower_threshold=None,
-                 higher_threshold=None,
-                 dimensionality=2000,
-                 num_indices=8,
-                 vocabulary=None,
-                 matrix=None,
-                 ordered=False,
-                 directed=False,
-                 language=None,
-                 is_ngrams=False,
                  **kwargs):
         """
-        Builds a Random Indexing DSM from text-iterator. 
-        Parameters:
-        window_size: 2-tuple of size of the context
-        matrix: Instantiate DSM with already created matrix.
-        vocabulary: When building, the DSM also creates a frequency dictionary. 
-                    If you include a matrix, you also might want to include a frequency dictionary
-        lower_threshold: Minimum frequency of word for it to be included.
-        higher_threshold: Maximum frequency of word for it to be included.
-        ordered: Differentates between context words in different positions. 
-        directed: Differentiates between left and right context words.
-        dimensionality: Number of columns in matrix.
-        num_indices: Number of positive indices, as well as number of negative indices.
+        Todo.
         """
-
         self.word_vectors = {}
-
-        super(RILangID, self).__init__(matrix,
-                                       None,
-                                       window_size,
-                                       vocabulary,
-                                       config,
-                                       language=language,
-                                       lower_threshold=lower_threshold,
-                                       higher_threshold=higher_threshold,
-                                       dimensionality=dimensionality,
-                                       num_indices=num_indices,
-                                       ordered=ordered,
-                                       directed=directed)
-        
-        if corpus:
-            self.matrix = IndexMatrix(*self._build(words_to_blocks(corpus, window_size[0])))
+        super(RILangID, self).__init__(config=config)
 
     
     def get_index_vector(self, context):
@@ -86,7 +33,62 @@ class RILangID(DSM):
             self.word_vectors[context] = index_vector
         return self.word_vectors[context]
 
-class RILangVectorAddition(RILangID):
+
+class LetterBased(RILangID):
+    @classmethod
+    def words_to_blocks(cls, corpus, block_size):
+        block = []
+        for sentence in corpus:
+            for char in sentence:
+                if len(block) < block_size:
+                    block.append(char)
+                    continue
+                yield block
+                block = block[1:] + [char]
+        yield block
+
+    """
+    Todo.
+    """
+    def __init__(self, corpus=None, config=None, **kwargs):
+        super(LetterBased, self).__init__(corpus=corpus, config=config)
+        if corpus:
+            self.matrix = self.build(corpus)
+
+    def identify(self, sentence):
+        """
+        Todo.
+        """
+        text_model = self.build(sentence)
+        return self.nearest_neighbors(text_model)
+
+    def train(self, corpora):
+        """
+        Trains a language model.
+        Parameters:
+            corpora: A dict of language: file objects.
+        """
+
+        print("Creating new model {}.".format(type(self).__name__))
+
+        for i, (language, corpus) in enumerate(corpora.items()):
+            print("Reading {} ... {} / {}".format(language, i + 1, len(corpora)))
+            self.config['language'] = language
+            lang_vector = self.build(corpus)
+            self.matrix = self.matrix.merge(lang_vector)
+            self.store(self.config['store_path'])
+            print("Stored model at {}".format(self.config['store_path']))
+
+        print("Done training model.")
+
+    def build(self, text):
+        return IndexMatrix(*self._build(self.words_to_blocks(text, self.config['block_size'])))
+
+###### Implemented models ######
+class RILangVectorAddition(LetterBased):
+    """
+    Todo.
+    """
     def _build(self, text):
         """
         Builds the text vector from text iterator.
@@ -106,8 +108,11 @@ class RILangVectorAddition(RILangID):
         col2word = list(range(self.config['dimensionality']))
 
         return text_vector, row2word, col2word
-
-class RILangVectorPermutation(RILangID):
+        
+class RILangVectorPermutation(LetterBased):
+    """
+    Todo.
+    """
     def _build(self, block_stream):
         """
         Builds the text vector from text iterator.
@@ -130,8 +135,10 @@ class RILangVectorPermutation(RILangID):
 
         return text_vector, row2word, col2word
 
-
-class RILangVectorConvolution(RILangID):
+class RILangVectorConvolution(LetterBased):
+    """
+    Todo.
+    """
     def _build(self, block_stream):
         """
         Builds the text vector from text iterator.
@@ -157,8 +164,10 @@ class RILangVectorConvolution(RILangID):
 
         return text_vector, row2word, col2word
 
-
-class RILangVectorNgrams(RILangID):
+class RILangVectorNgrams(LetterBased):
+    """
+    Todo.
+    """
     def _build(self, text_model):
         """
         Builds the text vector from text iterator.
@@ -178,6 +187,32 @@ class RILangVectorNgrams(RILangID):
 
         return text_vector, row2word, col2word
 
+class MultipleNgrams(RILangID):
+    """
+    Todo.
+    """
+    def _build(self, text_model):
+        """
+        Builds the text vector from text iterator.
+        Returns: text vector, row ids, column ids.
+        """
+
+        text_vector = np.zeros((1, self.config['dimensionality']))
+        for block in text_model:
+            n = len(block)//2
+            parts = ["".join(block[:n]), "".join(block[n:]), "".join(block)]
+            for part in parts:
+                block_vector = self.get_index_vector(part)
+                text_vector += block_vector
+
+        if 'language' in self.config:
+            row2word = [self.config['language']]
+        else:
+            row2word = ['']
+        col2word = list(range(self.config['dimensionality']))
+
+        return text_vector, row2word, col2word
+
 
 class RILangVectorNgramsGramSchmidt(RILangVectorNgrams):
     @DSM.matrix.setter
@@ -185,12 +220,21 @@ class RILangVectorNgramsGramSchmidt(RILangVectorNgrams):
         if mat.shape[0] == 0 or mat.shape[1] == 0:
             self._matrix = mat
         else:
-            orthogonalized = scipy.sparse.coo_matrix(self.Gram_Schmidt(mat.to_ndarray()))
+            orthogonalized = scipy.sparse.coo_matrix(self.gram_schmidt(mat.to_ndarray()))
             self._matrix = mat._new_instance(orthogonalized)
     
+    def nearest_neighbors(self, text_vec, sim_func=pydsm.similarity.cos):
+        """
+        Project vector on language vectors before performing nearest neighbors search.
+        """
+        lang_vecs = self.matrix
+        scalar_projections = (lang_vecs.dot(text_vec.transpose()) / lang_vecs.norm(axis=1)) 
+        projected = lang_vecs.multiply(scalar_projections).sum(axis=0)
+
+        return DSM.nearest_neighbors(self, projected, sim_func=sim_func)
 
     @classmethod
-    def Gram_Schmidt(cls, vecs, row_wise_storage=True):
+    def gram_schmidt(cls, vecs, row_wise_storage=True):
         """
         Apply the Gram-Schmidt orthogonalization algorithm to a set
         of vectors. vecs is a two-dimensional array where the vectors
@@ -199,9 +243,6 @@ class RILangVectorNgramsGramSchmidt(RILangVectorNgrams):
         An array basis is returned, where basis[i,:] (row_wise_storage
         is True) or basis[:,i] (row_wise_storage is False) is the i-th
         orthonormal vector in the basis.
-
-        This function does not handle null vectors, see Gram_Schmidt
-        for a (slower) function that does.
         """
         from numpy.linalg import inv
         vecs = np.asarray(vecs)  # transform to array if list of vectors
@@ -222,26 +263,11 @@ class RILangVectorNgramsGramSchmidt(RILangVectorNgrams):
 
 
 class ShortestPath(RILangID):
-    def _build(self, block_stream):
-        """
-        Builds the text vector from text iterator.
-        Returns: text vector, row ids, column ids.
-        """
+    def identify(self, sentence):
+        pass
 
-        text_vector = np.zeros((1, self.config['dimensionality']))
-        for block in block_stream:
-            block_vector = np.ones_like(text_vector)
-            #print("Block {}: {}".format('init', block_vector))
-            block_vector = np.multiply(block_vector,self.get_index_vector("".join(block)))
-            block_vector = np.roll(block_vector, 1)
-
-            text_vector += block_vector
-
-        if 'language' in self.config:
-            row2word = [self.config['language']]
-        else:
-            row2word = ['']
-
-        col2word = list(range(self.config['dimensionality']))
-
-        return text_vector, row2word, col2word
+    def train(self, corpora):
+        pass
+    
+    def build(self, text):
+        pass

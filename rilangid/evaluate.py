@@ -1,7 +1,6 @@
 from models import *
 import os
 import re
-import rilangid
 import pyresult
 import pydsm
 import sys
@@ -41,7 +40,7 @@ def evaluate(model_path, test_sentences):
     model = pydsm.load(model_path)
     pred_results = {}
     for sentence, language in test_sentences.items():
-        pred = rilangid.identify(model, sentence)
+        pred = model.identify(sentence)
         pred = pred.row2word[0]
         pred_results[sentence] = pred
         if pred == language:
@@ -54,10 +53,13 @@ def run_experiment(configuration):
     test_sentences = load_test_sentences(configuration['test_path'])
     proj = load_project(configuration['project_name'], test_sentences, assert_clean_repo=configuration.get('assert_clean_repo', True))
     corpora = get_corpora(configuration['languages'])
+
     print("Starting training with configuration:")
     pprint(configuration, width=80)
-    rilangid.train(corpora, configuration)
+    model = configuration['rimodel'](config=configuration)
+    model.train(corpora)
     print("Evaluating model...")
+    
     sentence_results = evaluate(configuration['store_path'], test_sentences)
     experiment = proj.new_experiment(predicted=sentence_results,
                                      configuration=configuration,
