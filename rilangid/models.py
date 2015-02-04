@@ -1,11 +1,11 @@
 import pydsm
-from pydsm import IndexMatrix
+from pydsm import IndexMatrix, RandomIndexing
 from pydsm.model import DSM
 import scipy
 import numpy as np
 import hashlib
 
-class RILangID(DSM):
+class RILangID(RandomIndexing):
     def __init__(self,
                  corpus=None,
                  config=None,
@@ -13,10 +13,30 @@ class RILangID(DSM):
         """
         Todo.
         """
-        self.word_vectors = {}
-        super(RILangID, self).__init__(config=config)
-
+        super().__init__(config=config)
     
+
+class LetterBased(RILangID):
+    """
+    Todo.
+    """
+
+    @classmethod
+    def words_to_blocks(cls, corpus, block_size):
+        block = []
+        for sentence in corpus:
+            for char in sentence:
+                if len(block) < block_size:
+                    block.append(char)
+                    continue
+                yield block
+                block = block[1:] + [char]
+        yield block
+
+    def __init__(self, corpus=None, config=None, **kwargs):
+        super().__init__(corpus=corpus, config=config)
+        self.word_vectors = {}
+
     def get_index_vector(self, context):
         if context not in self.word_vectors:
             # Create index vector if not exist
@@ -33,34 +53,12 @@ class RILangID(DSM):
             self.word_vectors[context] = index_vector
         return self.word_vectors[context]
 
-
-class LetterBased(RILangID):
-    @classmethod
-    def words_to_blocks(cls, corpus, block_size):
-        block = []
-        for sentence in corpus:
-            for char in sentence:
-                if len(block) < block_size:
-                    block.append(char)
-                    continue
-                yield block
-                block = block[1:] + [char]
-        yield block
-
-    """
-    Todo.
-    """
-    def __init__(self, corpus=None, config=None, **kwargs):
-        super(LetterBased, self).__init__(corpus=corpus, config=config)
-        if corpus:
-            self.matrix = self.build(corpus)
-
     def identify(self, sentence):
         """
         Todo.
         """
         text_model = self.build(sentence)
-        return self.nearest_neighbors(text_model)
+        return self.nearest_neighbors(text_model).row2word[0]
 
     def train(self, corpora):
         """
@@ -78,6 +76,8 @@ class LetterBased(RILangID):
             self.matrix = self.matrix.merge(lang_vector)
             self.store(self.config['store_path'])
             print("Stored model at {}".format(self.config['store_path']))
+
+        del self.config['language']
 
         print("Done training model.")
 
@@ -108,7 +108,7 @@ class RILangVectorAddition(LetterBased):
         col2word = list(range(self.config['dimensionality']))
 
         return text_vector, row2word, col2word
-        
+
 class RILangVectorPermutation(LetterBased):
     """
     Todo.
@@ -263,11 +263,42 @@ class RILangVectorNgramsGramSchmidt(RILangVectorNgrams):
 
 
 class ShortestPath(RILangID):
+    def __init__(self, config=None):
+        super().__init__(config=config)
+
     def identify(self, sentence):
-        pass
+        words = sentence.split(" ")
+        best_lang = None
+        best_score = float("inf")
+        for language, langmat in self.matrix.items():
+            last_vec = None
+            distance = 0
+            for w in words:
+                if w in langmat.word2row:
+                    vec = langmat[w]
+                else:
+                    vec = None
+
+                if last_vec is not None and w in langmat.word2row:
+                    distance += abs(pydsm.similarity.cos(last_vec, vec)[0,0])
+                else:
+                    distance += 1
+                
+                last_vec = vec
+
+            if best_score > distance:
+                best_score = distance
+                best_lang = language                
+
+        return best_lang
 
     def train(self, corpora):
-        pass
+        self.matrix = {}
+        for language, corpus in corpora.items():
+            print("Reading {}...".format(language))
+            self.matrix[language] = self.build(corpus)
+        self.store(self.config['store_path'])
+        print("Stored model at {}".format(self.config['store_path']))
     
     def build(self, text):
-        pass
+        return RandomIndexing(corpus=text, config=self.config).matrix

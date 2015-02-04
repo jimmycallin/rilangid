@@ -25,39 +25,40 @@ def get_corpora(languages):
         corpora[language] = open('resources/train/reproduce/{}.txt'.format(language))
     return corpora
 
-def load_test_sentences(path):
+def load_test_sentences(path, languages):
     sentences = {}
     path_content = os.listdir(path)
     for f in path_content:
         if re.match('(\w+)_\d+_p.txt', f):
-            with open(path + f) as content:
-                lang = re.findall('(\w+)_\d+_p.txt$', f)[0]
-                sentences[content.readline().strip()] = lang
+            lang = re.findall('(\w+)_\d+_p.txt$', f)[0]
+            if lang in languages:
+                with open(path + f) as content:
+                    sentences[content.readline().strip()] = lang
 
     return sentences
 
 def evaluate(model_path, test_sentences):
     model = pydsm.load(model_path)
     pred_results = {}
-    for sentence, language in test_sentences.items():
+    for i, (sentence, language) in enumerate(test_sentences.items()):
         pred = model.identify(sentence)
-        pred = pred.row2word[0]
         pred_results[sentence] = pred
         if pred == language:
-            print("Correct! {} == {}".format(pred, language))
+            print("Correct! {} == {}. {} / {}".format(pred, language, i+1, len(test_sentences)))
         else:
-            print("Incorrect. {} != {}".format(pred, language))
+            print("Incorrect. {} != {}. {} / {}".format(pred, language, i+1, len(test_sentences)))
     return pred_results
 
 def run_experiment(configuration):
-    test_sentences = load_test_sentences(configuration['test_path'])
+    test_sentences = load_test_sentences(configuration['test_path'], configuration['languages'])
     proj = load_project(configuration['project_name'], test_sentences, assert_clean_repo=configuration.get('assert_clean_repo', True))
     corpora = get_corpora(configuration['languages'])
 
     print("Starting training with configuration:")
     pprint(configuration, width=80)
-    model = configuration['rimodel'](config=configuration)
-    model.train(corpora)
+    if configuration.get('train', True):
+        model = configuration['rimodel'](config=configuration)
+        model.train(corpora)
     print("Evaluating model...")
     
     sentence_results = evaluate(configuration['store_path'], test_sentences)
