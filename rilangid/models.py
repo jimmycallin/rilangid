@@ -297,29 +297,47 @@ class ShortestPath(RILangID):
         super().__init__(config=config)
 
     def identify(self, sentence):
-        words = sentence.split(" ")
+        words = sentence.split()
         best_lang = None
         best_score = 0
+
+        # If sentence is only one word, take the language with the highest norm
+        # of word vector.
+        if len(words) == 1:
+            best_score = 0
+            best_lang = None
+            for language, langmat in self.matrix.items():
+                if words[0] in langmat.word2row:
+                    norm = langmat[words[0]].norm()
+                    if norm > best_score:
+                        best_score = norm
+                        best_lang = language
+            return best_lang
+
         for language, langmat in self.matrix.items():
             last_vec = None
             distance = 0
+
             for w in words:
                 if w in langmat.word2row:
                     vec = langmat[w]
                 else:
                     vec = None
 
-                # THIS SHOULDN'T WORK???
                 if last_vec and vec:
                     distance += abs(pydsm.similarity.cos(
-                        last_vec, vec, assure_consistency=self.config.get('assure_consistency', False))[0, 0])
-
+                                    last_vec,
+                                    vec,
+                                    assure_consistency=self.config.get('assure_consistency',
+                                                                       False))[0, 0])
                 last_vec = vec
 
             if distance > best_score:
                 best_score = distance
                 best_lang = language
 
+        if best_lang is None:
+            print("NONE: {} with score of {} for sentence: \n {} \n {}".format(best_lang, best_score, sentence, words))
         return best_lang
 
     def train(self, corpora):
@@ -370,8 +388,9 @@ class Eigenvectors(RILangID):
                 if w in mat.row2word:
                     wordvec = mat[w]
                     distance += abs(pydsm.similarity.cos(wordvec,
-                                                        self.langvectors[language],
-                                                        assure_consistency=self.config.get('assure_consistency', False))[0, 0])
+                                                         self.langvectors[
+                                                             language],
+                                                         assure_consistency=self.config.get('assure_consistency', False))[0, 0])
 
             if distance > best_score:
                 best_lang = language
