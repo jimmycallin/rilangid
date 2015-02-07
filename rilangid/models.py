@@ -303,16 +303,16 @@ class ShortestPath(RILangID):
 
         # If sentence is only one word, take the language with the highest norm
         # of word vector.
-        if len(words) == 1:
-            best_score = 0
-            best_lang = None
-            for language, langmat in self.matrix.items():
-                if words[0] in langmat.word2row:
-                    norm = langmat[words[0]].norm()
-                    if norm > best_score:
-                        best_score = norm
-                        best_lang = language
-            return best_lang
+        # if len(words) == 1:
+        #     best_score = 0
+        #     best_lang = None
+        #     for language, langmat in self.matrix.items():
+        #         if words[0] in langmat.word2row:
+        #             norm = langmat[words[0]].norm()
+        #             if norm > best_score:
+        #                 best_score = norm
+        #                 best_lang = language
+        #     return best_lang
 
         for language, langmat in self.matrix.items():
             last_vec = None
