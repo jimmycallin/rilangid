@@ -7,12 +7,15 @@ import sys
 from importlib import import_module
 from pprint import pprint
 
-languages = ['eng', 'bul', 'nld', 'fin', 'lav', 'lit', 'ron', 'deu', 'por', 'slk', 'slv', 'ita', 'spa', 'pol', 'hun', 'ell', 'dan', 'fra', 'est', 'ces', 'afr', 'swe']
+languages = ['eng', 'bul', 'nld', 'fin', 'lav', 'lit', 'ron', 'deu', 'por', 'slk',
+             'slv', 'ita', 'spa', 'pol', 'hun', 'ell', 'dan', 'fra', 'est', 'ces', 'afr', 'swe']
+
 
 def load_project(configuration, assert_clean_repo=False):
     project_name = configuration.pop('project_name')
     test_sentences = load_test_sentences(configuration)
-    proj = expy.Project.search_project(project_name=project_name, assert_clean_repo=assert_clean_repo)
+    proj = expy.Project.search_project(
+        project_name=project_name, assert_clean_repo=assert_clean_repo)
     if proj:
         print("Loaded existing project {}.".format(project_name))
     else:
@@ -20,11 +23,14 @@ def load_project(configuration, assert_clean_repo=False):
         print("Created new project {}.".format(project_name))
     return proj
 
+
 def get_corpora(languages):
     corpora = {}
     for language in languages:
-        corpora[language] = open('resources/train/reproduce/{}.txt'.format(language))
+        corpora[language] = open(
+            'resources/train/reproduce/{}.txt'.format(language))
     return corpora
+
 
 def load_test_sentences(configuration):
     sentences = {}
@@ -38,6 +44,7 @@ def load_test_sentences(configuration):
 
     return sentences
 
+
 def evaluate(model_path, test_sentences):
     model = pydsm.load(model_path)
     pred_results = {}
@@ -45,13 +52,21 @@ def evaluate(model_path, test_sentences):
         pred = model.identify(sentence)
         pred_results[sentence] = pred
         if pred == language:
-            print("Correct! {} == {}. {} / {}".format(pred, language, i+1, len(test_sentences)))
+            print("Correct! {} == {}. {} / {}".format(pred,
+                                                      language,
+                                                      i + 1,
+                                                      len(test_sentences)))
         else:
-            print("Incorrect. {} != {}. {} / {}".format(pred, language, i+1, len(test_sentences)))
+            print("Incorrect. {} != {}. {} / {}".format(pred,
+                                                        language,
+                                                        i + 1,
+                                                        len(test_sentences)))
     return pred_results
 
+
 def run_experiment(configuration):
-    proj = load_project(configuration, assert_clean_repo=configuration.pop('assert_clean_repo', True))
+    proj = load_project(
+        configuration, assert_clean_repo=configuration.pop('assert_clean_repo', True))
     test_sentences = proj.test_data
     corpora = get_corpora(configuration['languages'])
 

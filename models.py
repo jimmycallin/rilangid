@@ -13,7 +13,8 @@ class RILangID(RandomIndexing):
                  config=None,
                  **kwargs):
         """
-        Todo.
+        This is a super class for all language identification models using random indexing.
+        Its only purpose is to initiate the RandomIndexing.__init__ using the given configuration.
         """
         super().__init__(config=config)
 
@@ -161,12 +162,10 @@ class RILangVectorConvolution(LetterBased):
         text_vector = np.zeros((1, self.config['dimensionality']))
         for block in block_stream:
             block_vector = np.ones_like(text_vector)
-            #print("Block {}: {}".format('init', block_vector))
             for k, char in enumerate(block):
                 block_vector = np.multiply(
                     block_vector, self.get_index_vector(char))
                 block_vector = np.roll(block_vector, 1)
-                #print("Block {}: {}".format(k, block_vector))
 
             text_vector += block_vector
 
