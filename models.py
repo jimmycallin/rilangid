@@ -90,8 +90,8 @@ class LetterBased(RILangID):
     def build(self, text):
         return IndexMatrix(*self._build(self.words_to_blocks(text, self.config['block_size'])))
 
-###### Implemented models ######
 
+# # # # # # Implemented models # # # # # #
 
 class RILangVectorAddition(LetterBased):
 
@@ -104,7 +104,6 @@ class RILangVectorAddition(LetterBased):
         Builds the text vector from text iterator.
         Returns: text vector, row ids, column ids.
         """
-        word_to_col = {}
 
         text_vector = np.zeros((1, self.config['dimensionality']))
         for block in text:
@@ -114,8 +113,7 @@ class RILangVectorAddition(LetterBased):
 
             text_vector += block_vector
 
-        row2word = [
-            self.config['language']] if 'language' in self.config else ['']
+        row2word = [self.config['language']] if 'language' in self.config else ['']
         col2word = list(range(self.config['dimensionality']))
 
         return text_vector, row2word, col2word
@@ -132,21 +130,18 @@ class RILangVectorPermutation(LetterBased):
         Builds the text vector from text iterator.
         Returns: text vector, row ids, column ids.
         """
-        word_to_col = {}
-        indices = np.arange(self.config['num_indices'])
 
         text_vector = np.zeros((1, self.config['dimensionality']))
         for block in block_stream:
             block_vector = np.ones_like(text_vector)
             for k, char in enumerate(block):
                 char = "{}_{}".format(char, k)
-                block_vector = np.multiply(
-                    block_vector, self.get_index_vector(char))
+                block_vector = np.multiply(block_vector, self.get_index_vector(char))
 
             text_vector += block_vector
 
         row2word = [self.config['language']]
-        col2word = indices.tolist()
+        col2word = list(range(self.config['dimensionality']))
 
         return text_vector, row2word, col2word
 
