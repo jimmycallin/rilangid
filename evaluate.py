@@ -2,7 +2,6 @@ from models import *
 import os
 import re
 import expy
-import pydsm
 import sys
 from importlib import import_module
 from pprint import pprint
@@ -45,22 +44,15 @@ def load_test_sentences(configuration):
     return sentences
 
 
-def evaluate(model_path, test_sentences):
-    model = pydsm.load(model_path)
+def evaluate(model, test_sentences):
     pred_results = {}
     for i, (sentence, language) in enumerate(test_sentences.items()):
         pred = model.identify(sentence)
         pred_results[sentence] = pred
         if pred == language:
-            print("Correct! {} == {}. {} / {}".format(pred,
-                                                      language,
-                                                      i + 1,
-                                                      len(test_sentences)))
+            print("Correct! {} == {}. {} / {}".format(pred, language, i + 1, len(test_sentences)))
         else:
-            print("Incorrect. {} != {}. {} / {}".format(pred,
-                                                        language,
-                                                        i + 1,
-                                                        len(test_sentences)))
+            print("Incorrect. {} != {}. {} / {}".format(pred, language, i + 1, len(test_sentences)))
     return pred_results
 
 
@@ -78,7 +70,7 @@ def run_experiment(configuration):
         model.train(corpora)
     print("Evaluating model...")
 
-    sentence_results = evaluate(configuration['store_path'], test_sentences)
+    sentence_results = evaluate(model, test_sentences)
     experiment = proj.new_experiment(predicted=sentence_results,
                                      tags=configuration.pop('tags', None),
                                      configuration=configuration,

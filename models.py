@@ -81,8 +81,6 @@ class LetterBased(RILangID):
             self.config['language'] = language
             lang_vector = self.build(corpus)
             self.matrix = self.matrix.merge(lang_vector)
-            self.store(self.config['store_path'])
-            print("Stored model at {}".format(self.config['store_path']))
 
         del self.config['language']
 
@@ -141,7 +139,7 @@ class RILangVectorPermutation(LetterBased):
 
             text_vector += block_vector
 
-        row2word = [self.config['language']]
+        row2word = [self.config['language']] if 'language' in self.config else ['']
         col2word = list(range(self.config['dimensionality']))
 
         return text_vector, row2word, col2word
@@ -339,8 +337,6 @@ class ShortestPath(RILangID):
         for language, corpus in corpora.items():
             print("Reading {}...".format(language))
             self.matrix[language] = self.build(corpus)
-        self.store(self.config['store_path'])
-        print("Stored model at {}".format(self.config['store_path']))
 
     def build(self, text):
         return RandomIndexing(corpus=text, config=self.config).matrix
@@ -400,8 +396,6 @@ class Eigenvectors(RILangID):
             langmodel = self.matrix[language].sum(axis=0)
             langmodel.row2word = [language]
             self.langvectors = self.langvectors.merge(langmodel)
-        self.store(self.config['store_path'])
-        print("Stored model at {}".format(self.config['store_path']))
 
     def build(self, text):
         model = RandomIndexing(corpus=text, config=self.config).matrix
