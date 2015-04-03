@@ -62,7 +62,7 @@ def run_experiment(configuration):
         model = configuration['rimodel'](config=configuration)
         model.train(corpora)
     print("Evaluating model...")
-    
+
     sentence_results = evaluate(configuration['store_path'], test_sentences)
     experiment = proj.new_experiment(predicted=sentence_results,
                                      tags=configuration.pop('tags', None),
