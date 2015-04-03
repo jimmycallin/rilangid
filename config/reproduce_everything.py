@@ -2,15 +2,16 @@ from models import *
 from evaluate import languages
 import itertools
 
+
 def get_configs():
 
     configs = []
-    
+
     rimodel = RILangVectorNgrams
     config = {
         'project_name': 'RILangID',
         'languages': languages,
-        'test_path': "/Users/jimmy/dev/projects/rilangid/rilangid/resources/test/reproduce/",
+        'test_path': "/Users/jimmy/dev/projects/rilangid/resources/test/reproduce/",
         'block_size': 3,
         'dimensionality': 10000,
         'num_indices': 8,
@@ -21,7 +22,7 @@ def get_configs():
         'rimodel': rimodel,
         'assert_clean_repo': True,
         'train': True,
-        'store_path': '/Users/Jimmy/dev/projects/rilangid/rilangid/resources/models/block_size.{}.{}.dsm'.format(rimodel.__name__, 3)
+        'store_path': '/Users/Jimmy/dev/projects/rilangid/resources/models/block_size.{}.{}.dsm'.format(rimodel.__name__, 3)
     }
     #configs.append(config.copy())
 
@@ -29,7 +30,7 @@ def get_configs():
     config = {
         'project_name': 'RILangID',
         'languages': languages,
-        'test_path': "/Users/jimmy/dev/projects/rilangid/rilangid/resources/test/reproduce/",
+        'test_path': "/Users/jimmy/dev/projects/rilangid/resources/test/reproduce/",
         'block_size': 3,
         'dimensionality': 2000,
         'num_indices': 8,
@@ -39,7 +40,7 @@ def get_configs():
         'tags': ['letterbased', 'ngrams'],
         'rimodel': rimodel,
         'assert_clean_repo': True,
-        'store_path': '/Users/Jimmy/dev/projects/rilangid/rilangid/resources/models/block_size.{}.{}.dsm'.format(rimodel.__name__, 3)
+        'store_path': '/Users/Jimmy/dev/projects/rilangid/resources/models/block_size.{}.{}.dsm'.format(rimodel.__name__, 3)
     }
     #configs.append(config.copy())
 
@@ -47,7 +48,7 @@ def get_configs():
     config = {
         'project_name': 'RILangID',
         'languages': languages,
-        'test_path': "/Users/jimmy/dev/projects/rilangid/rilangid/resources/test/reproduce/",
+        'test_path': "/Users/jimmy/dev/projects/rilangid/resources/test/reproduce/",
         'block_size': 3,
         'dimensionality': 10000,
         'num_indices': 10000,
@@ -57,7 +58,7 @@ def get_configs():
         'tags': ['letterbased', 'ngrams', 'permutation'],
         'rimodel': rimodel,
         'assert_clean_repo': True,
-        'store_path': '/Users/Jimmy/dev/projects/rilangid/rilangid/resources/models/block_size.{}.{}.dsm'.format(rimodel.__name__, 3)
+        'store_path': '/Users/Jimmy/dev/projects/rilangid/resources/models/block_size.{}.{}.dsm'.format(rimodel.__name__, 3)
     }    
     configs.append(config.copy())
 
@@ -65,7 +66,7 @@ def get_configs():
     config = {
         'project_name': 'RILangID',
         'languages': languages,
-        'test_path': "/Users/jimmy/dev/projects/rilangid/rilangid/resources/test/reproduce/",
+        'test_path': "/Users/jimmy/dev/projects/rilangid/resources/test/reproduce/",
         'block_size': 3,
         'dimensionality': 10000,
         'num_indices': 10000,
@@ -75,7 +76,7 @@ def get_configs():
         'tags': ['letterbased', 'ngrams', 'convolution'],
         'assert_clean_repo': True,
         'rimodel': rimodel,
-        'store_path': '/Users/Jimmy/dev/projects/rilangid/rilangid/resources/models/block_size.{}.{}.dsm'.format(rimodel.__name__, 3)
+        'store_path': '/Users/Jimmy/dev/projects/rilangid/resources/models/block_size.{}.{}.dsm'.format(rimodel.__name__, 3)
     }    
     configs.append(config.copy())
 
@@ -83,7 +84,7 @@ def get_configs():
     config = {
         'project_name': 'RILangID',
         'languages': languages,
-        'test_path': "/Users/jimmy/dev/projects/rilangid/rilangid/resources/test/reproduce/",
+        'test_path': "/Users/jimmy/dev/projects/rilangid/resources/test/reproduce/",
         'window_size': (100,100),
         'dimensionality': 2000,
         'num_indices': 8,
@@ -91,7 +92,7 @@ def get_configs():
         'ordered': True,
         'tags': ['shortestpath'],
         'description': "Implementation of shortest path algorithm, testing various versions of directed and ordered context.",
-        'store_path': '/Users/Jimmy/dev/projects/rilangid/rilangid/resources/models/shortestpath.{}.dsm'.format(rimodel.__name__),
+        'store_path': '/Users/Jimmy/dev/projects/rilangid/resources/models/shortestpath.{}.dsm'.format(rimodel.__name__),
         'rimodel': rimodel,
         'assert_clean_repo': True,
         'train': True
