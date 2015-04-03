@@ -11,6 +11,10 @@ languages = ['eng', 'bul', 'nld', 'fin', 'lav', 'lit', 'ron', 'deu', 'por', 'slk
 
 
 def load_project(configuration, assert_clean_repo=False):
+    """
+    Loads the expy project using `project_name` from the configuration.
+    The expy project is used to store the configuration and result of an experiment.
+    """
     project_name = configuration.pop('project_name')
     test_sentences = load_test_sentences(configuration)
     proj = expy.Project.search_project(
@@ -24,6 +28,9 @@ def load_project(configuration, assert_clean_repo=False):
 
 
 def get_corpora(languages):
+    """
+    Loads the language corpora.
+    """
     corpora = {}
     for language in languages:
         corpora[language] = open(
@@ -32,6 +39,9 @@ def get_corpora(languages):
 
 
 def load_test_sentences(configuration):
+    """
+    Loads the test data from `test_path` in configuration.
+    """
     sentences = {}
     path_content = os.listdir(configuration['test_path'])
     for f in path_content:
@@ -45,6 +55,9 @@ def load_test_sentences(configuration):
 
 
 def evaluate(model, test_sentences):
+    """
+    Runs evaluation from test data and returns the result of the evaluation in the form of {test_instance: prediction}.
+    """
     pred_results = {}
     for i, (sentence, language) in enumerate(test_sentences.items()):
         pred = model.identify(sentence)
@@ -57,6 +70,22 @@ def evaluate(model, test_sentences):
 
 
 def run_experiment(configuration):
+    """
+    Runs the experiment given the configuration.
+    The configuration is a dictionary containing the following parameters:
+        project_name: Name of expy project.
+        languages: What languages in test data to use.
+        test_path: Path to test data.
+        block_size: Size of character ngrams.
+        dimensionality: Dimensionality of Random Indexing space.
+        num_indices: Number of indices in RI space
+        directed: Whether to differ between left and right of focus word in RI space.
+        ordered: Whether to differ between order of context words from the focus word
+        description: Description of experiment to save in expy project.
+        tags: Tags to save in expy project.
+        rimodel: What RI model to use.
+        assert_clean_repo: Boolean of whether to check if everything has been committed and the repo is clean.
+    """
     proj = load_project(
         configuration, assert_clean_repo=configuration.pop('assert_clean_repo', True))
     test_sentences = proj.test_data
@@ -64,10 +93,9 @@ def run_experiment(configuration):
 
     print("Configuration:")
     pprint(configuration, width=80)
-    if configuration.get('train', True):
-        print("Starting training...")
-        model = configuration['rimodel'](config=configuration)
-        model.train(corpora)
+    print("Starting training...")
+    model = configuration['rimodel'](config=configuration)
+    model.train(corpora)
     print("Evaluating model...")
 
     sentence_results = evaluate(model, test_sentences)
@@ -82,6 +110,11 @@ def run_experiment(configuration):
 
 
 if __name__ == "__main__":
+    if len(sys.argv != 2):
+        print("Usage:")
+        print("python evaluation.py config.config_module")
+        sys.exit(1)
+
     configs = import_module(sys.argv[1]).get_configs()
     for conf in configs:
         run_experiment(conf)
