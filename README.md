@@ -7,7 +7,7 @@ A number of different candidate models where tested, and are to be described bel
 
 ## Requirements for running
 
-The experiments are built upon [PyDSM](https://github.com/jimmycallin/expy), a library made for exploring distributional semantic models. Make sure you have this installed first.
+The experiments are built upon [PyDSM](https://github.com/jimmycallin/pydsm), a library made for exploring distributional semantic models. Make sure you have this installed first.
 
 You also need to have [Expy](https://github.com/jimmycallin/expy) installed. This is for saving your experiment results as well as calculating result measures.
 
