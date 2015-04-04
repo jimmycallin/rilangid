@@ -7,7 +7,7 @@ from importlib import import_module
 from pprint import pprint
 
 languages = ['eng', 'bul', 'nld', 'fin', 'lav', 'lit', 'ron', 'deu', 'por', 'slk',
-             'slv', 'ita', 'spa', 'pol', 'hun', 'ell', 'dan', 'fra', 'est', 'ces', 'afr', 'swe']
+             'slv', 'ita', 'spa', 'pol', 'hun', 'ell', 'dan', 'fra', 'est', 'ces', 'swe']
 
 
 def load_project(configuration, assert_clean_repo=False):
@@ -110,7 +110,7 @@ def run_experiment(configuration):
 
 
 if __name__ == "__main__":
-    if len(sys.argv != 2):
+    if len(sys.argv) != 2:
         print("Usage:")
         print("python evaluation.py config.config_module")
         sys.exit(1)
